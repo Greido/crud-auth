@@ -1,24 +1,33 @@
 import User from '../models/user.model.js'
+import bcrypt from 'bcryptjs'
+import {createAccessToken} from '../libs/jwt.js'
 
-export const register = async (req,res) => {
+export const register = async (req, res) => {
+    const { email, password, username } = req.body
 
-        const {email, password, username} = req.body
+    try {
+        const passwordHash = await bcrypt.hash(password, 10)
 
-            try {
-                const newUser = new User ({
-                    username,
-                    email,
-                    password
-                })
-        
-                await newUser.save()
-                console.log(newUser)
-            } catch (error) {
-                console.log(error)
-            }
-        
+        const newUser = new User({
+            username,
+            email,
+            password: passwordHash
+        })
 
-        res.send('registrando')}
+        const userSaved = await newUser.save()
+        await createAccessToken({id: userSaved._id})
+   
+            res.cookie('token',token)
+                res.json({
+                 message: "User created successfully"
+            })
 
 
-export const login = (req,res) => res.send('matata')
+    } catch (error) {
+        console.log(error)
+    }
+
+    
+}
+
+export const login = (req, res) => res.send('matata')
